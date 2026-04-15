@@ -1,6 +1,6 @@
-ccxt
+requests
 google-generativeai
 langchain
 langchain-google-genai
-requests
-python-dotenv
+pybit
+beautifulsoup4
