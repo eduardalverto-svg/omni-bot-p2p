@@ -1,20 +1,22 @@
-name: Patrulla Omni-Bot
-on:
-  schedule:
-    - cron: '*/30 * * * *' # Se ejecuta cada 30 minutos
-  workflow_dispatch: # Permite activarlo manualmente
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - run: pip install -r requirements.txt
-      - name: Ejecutar Bot
-        env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python main.py
+import os
+import requests
+
+# Estos son los secretos que ya guardaste en GitHub
+token = os.getenv('TELEGRAM_TOKEN')
+chat_id = os.getenv('TELEGRAM_CHAT_ID')
+
+def enviar_saludo():
+    mensaje = "🚀 ¡Omni-Bot P2P Activado con Éxito! Estoy patrullando el mercado por ti."
+    url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={mensaje}"
+    
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            print("Mensaje enviado correctamente")
+        else:
+            print(f"Error al enviar: {response.text}")
+    except Exception as e:
+        print(f"Error de red: {e}")
+
+if __name__ == "__main__":
+    enviar_saludo()
