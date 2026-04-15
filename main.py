@@ -1,47 +1,50 @@
 import os
 import requests
 
-# Carga de llaves desde tus Secrets guardados
+# 1. Configuración de llaves (Secrets)
 token = os.getenv('TELEGRAM_TOKEN')
 chat_id = os.getenv('TELEGRAM_CHAT_ID')
 gemini_key = os.getenv('GEMINI_API_KEY')
 
-def obtener_datos_mercado():
-    # Sacamos precio de Bitcoin y Ethereum de Binance
+def obtener_precios():
+    # Conexión directa con Binance para ver la realidad del mercado
     url = "https://api.binance.com/api/v3/ticker/price"
-    precios = requests.get(url).json()
-    # Filtramos solo los que nos interesan
-    data = {item['symbol']: item['price'] for item in precios if item['symbol'] in ['BTCUSDT', 'ETHUSDT']}
-    return data
+    res = requests.get(url).json()
+    # Filtramos BTC, ETH y BNB para el análisis
+    precios = {i['symbol']: i['price'] for i in res if i['symbol'] in ['BTCUSDT', 'ETHUSDT', 'BNBUSDT']}
+    return precios
 
 def pedir_analisis_gemini(datos):
-    # Aquí es donde Gemini actúa como tu analista personal
-    url_gemini = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={gemini_key}"
+    # Le enviamos los datos a Gemini para que tome una decisión
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={gemini_key}"
     prompt = {
         "contents": [{
             "parts": [{
-                "text": f"Analiza estos precios de Binance: {datos}. Dame un consejo rápido de arbitraje o trading en 2 frases."
+                "text": f"Eres un experto en Arbitraje P2P. Analiza estos precios de Binance: {datos}. Dame una recomendación de trading o arbitraje en 3 puntos breves y directos."
             }]
         }]
     }
-    res = requests.post(url_gemini, json=prompt)
-    return res.json()['candidates'][0]['content']['parts'][0]['text']
+    response = requests.post(url, json=prompt).json()
+    return response['candidates'][0]['content']['parts'][0]['text']
 
-def ejecutar_bot_autonomo():
+def ejecutar_patrulla():
     try:
-        mercado = obtener_datos_mercado()
+        # El bot mira el mercado
+        mercado = obtener_precios()
+        # El bot piensa con Gemini
         analisis = pedir_analisis_gemini(mercado)
         
+        # El bot te informa el resultado
         mensaje = (
-            "🤖 **OMNI-BOT AUTÓNOMO**\n\n"
-            f"📈 **Precios:**\n- BTC: ${mercado['BTCUSDT']}\n- ETH: ${mercado['ETHUSDT']}\n\n"
-            f"💡 **Análisis de Gemini:**\n{analisis}"
+            "🤖 **AGENTE OMNI-BOT ACTIVO**\n\n"
+            f"📈 **Mercado:**\n- BTC: ${mercado['BTCUSDT']}\n- ETH: ${mercado['ETHUSDT']}\n\n"
+            f"🧠 **Análisis de Inteligencia:**\n{analisis}"
         )
         
         url_tg = f"https://api.telegram.org/bot{token}/sendMessage"
         requests.post(url_tg, json={"chat_id": chat_id, "text": mensaje, "parse_mode": "Markdown"})
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error en la patrulla: {e}")
 
 if __name__ == "__main__":
-    ejecutar_bot_autonomo()
+    ejecutar_patrulla()
