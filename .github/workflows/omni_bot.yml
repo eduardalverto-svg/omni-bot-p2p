@@ -1,4 +1,19 @@
+name: Patrulla Omni-Bot
 on:
   schedule:
-    - cron: '0 * * * *'  # Se ejecuta solo cada hora, las 24 horas del día
+    - cron: '0 * * * *'  # Se ejecuta solo cada hora
   workflow_dispatch:      # Permite el botón manual
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with: { python-version: '3.10' }
+      - run: pip install requests
+      - name: Ejecutar Bot Autónomo
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python main.py
